@@ -10,6 +10,13 @@ function App() {
   const [limit, setLimit] = useState(5);
   const [status, setStatus] = useState("pending");
   const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 3;
+
+  const indexOfLastRow = currentPage * rowsPerPage;
+  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+  const currentRows = searchResults.slice(indexOfFirstRow, indexOfLastRow);
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
   // api
   // function to handle search
   const handleSearch = async () => {
@@ -44,7 +51,7 @@ function App() {
     }
   };
 
-  const handlePagination = (event) => {
+  const handleAPILimit = (event) => {
     const inputValue = event.target.value;
     if (inputValue !== "" && !isNaN(inputValue)) {
       const newLimit = parseInt(inputValue, 10);
@@ -59,6 +66,11 @@ function App() {
     setError("");
     handleSearch();
   };
+
+  const handlePagination = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
   return (
     <div className="App">
       <div className={`input-container`}>
@@ -86,7 +98,7 @@ function App() {
             </thead>
             {/* Table body */}
             <tbody>
-              {searchResults.map((item, index) => (
+              {currentRows.map((item, index) => (
                 <tr key={index}>
                   <td>{index + 1}</td>
                   <td>{item.region}</td>
@@ -98,16 +110,37 @@ function App() {
           </table>
         )}
 
-        {searchResults.length === 0 && status === "success" && (
+        {/* {searchResults.length === 0 && status === "success" && (
           <div className="text-center">No result found</div>
         )}
         {searchResults.length === 0 && status === "pending" && (
           <div className="text-center">Start searching</div>
-        )}
+        )} */}
+           {searchResults.length === 0 && (
+            <div className="text-center">
+              {status === "pending" ? "Start searching" : "No result found"}
+            </div>
+          )}
         {searchResults.length === 0 && status === "fail" && (
           <div className="text-center">Somthing Wrong Happen</div>
         )}
-
+        {/* Pagination  */}
+        {searchResults.length > rowsPerPage && (
+          <div>
+            <button
+              onClick={() => handlePagination(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => handlePagination(currentPage + 1)}
+              disabled={indexOfLastRow >= searchResults.length}
+            >
+              Next
+            </button>
+          </div>
+        )}
         {/* drop -down */}
         <div className="fetch-input-container">
           <input
@@ -115,7 +148,7 @@ function App() {
             min="5"
             max="10"
             value={limit}
-            onChange={handlePagination}
+            onChange={handleAPILimit}
             className="fetch-input"
           />
           <button onClick={handleFetchData} className="fetch-button">
